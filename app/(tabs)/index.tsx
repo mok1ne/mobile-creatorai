@@ -16,7 +16,9 @@ import {
   TrendingUp,
   X,
 } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import {
   Animated,
   Dimensions,
@@ -31,6 +33,7 @@ import {
 } from "react-native";
 
 const { width } = Dimensions.get("window");
+
 
 // Типы данных
 interface Niche {
@@ -72,6 +75,7 @@ const YouTubeCreatorApp = () => {
   const [selectedNiche, setSelectedNiche] = useState<Niche | null>(null);
   const [generatedScript, setGeneratedScript] =
     useState<GeneratedScript | null>(null);
+
   const [savedScripts, setSavedScripts] = useState<GeneratedScript[]>([]);
   const [showSavedScripts, setShowSavedScripts] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -79,8 +83,33 @@ const YouTubeCreatorApp = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
   const [showProModal, setShowProModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const menuSlideAnim = useRef(new Animated.Value(280)).current;
 
+
+const SearchBar = React.memo(
+  ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
+    return (
+      <View style={styles.searchContainer}>
+        <Search color="#9ca3af" size={20} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Поиск ниш..."
+          value={value}
+          onChangeText={onChange}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+          blurOnSubmit={false}
+        />
+      </View>
+    );
+  }
+);
+
+
+  
+const onChangeSearch = useCallback((text: string) => {
+  setSearchQuery(text);
+}, []);
   // Расширенный список ниш
   const allNiches: Niche[] = [
     {
@@ -320,68 +349,66 @@ const YouTubeCreatorApp = () => {
       text: "Трендовая музыка увеличивает шансы попасть в рекомендации на 50%",
     },
   ];
+  const MENU_WIDTH = 280;
+  const menuSlideAnim = useRef(new Animated.Value(MENU_WIDTH)).current;
+  const insets = useSafeAreaInsets();
 
   // Анимация меню
   useEffect(() => {
-    Animated.timing(menuSlideAnim, {
-      toValue: menuOpen ? 0 : 280,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [menuOpen]);
+    if (menuOpen) {
+      // старт за экраном
+      menuSlideAnim.setValue(MENU_WIDTH);
 
-  const scrollX = useRef(new Animated.Value(0)).current;
+      Animated.spring(menuSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 22,
+        stiffness: 180,
+        mass: 1,
+      }).start();
+    }
+  }, [menuOpen]);
+  const closeMenu = () => {
+    Animated.timing(menuSlideAnim, {
+      toValue: MENU_WIDTH,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      setMenuOpen(false);
+    });
+  };
+
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prev) => {
+        const nextIndex = (prev + 1) % tips.length;
+        // Скроллим к следующей карточке
+        scrollViewRef.current?.scrollTo({
+          x: nextIndex * (width - 48),
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Функция для клика на dot
+  const handleDotPress = (idx: number) => {
+    setCurrentTipIndex(idx);
     scrollViewRef.current?.scrollTo({
-      x: currentTipIndex * width,
+      x: idx * (width - 48),
       animated: true,
     });
-  }, [currentTipIndex]);
-
-  // PanResponder для свайпов
-  const tipsPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false, // НЕ захватываем сразу
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Захватываем ТОЛЬКО если горизонтальный свайп больше вертикального
-        return (
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) &&
-          Math.abs(gestureState.dx) > 10
-        );
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -50) {
-          setCurrentTipIndex((prev) => (prev + 1) % tips.length);
-        } else if (gestureState.dx > 50) {
-          setCurrentTipIndex((prev) => (prev - 1 + tips.length) % tips.length);
-        }
-      },
-    }),
-  ).current;
+  };
 
   const screenHeight = Dimensions.get("window").height;
 
   const slideAnim = useRef(new Animated.Value(screenHeight)).current;
   const proSlideAnim = useRef(new Animated.Value(screenHeight)).current;
   const loginSlideAnim = useRef(new Animated.Value(screenHeight)).current;
-
-  useEffect(() => {
-    if (selectedNiche !== null) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: screenHeight,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [selectedNiche]);
 
   useEffect(() => {
     if (selectedNiche !== null) {
@@ -433,42 +460,48 @@ const YouTubeCreatorApp = () => {
   ).current;
 
   useEffect(() => {
-    Animated.spring(proSlideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      damping: 20, // «жёсткость»
-      stiffness: 150, // скорость
-      mass: 1,
-    }).start();
+    if (showProModal) {
+      proSlideAnim.setValue(screenHeight);
+      Animated.spring(proSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 22,
+        stiffness: 180,
+        mass: 1,
+      }).start();
+    }
   }, [showProModal]);
 
   const proPanResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) => {
-        return gesture.dy > 10 && Math.abs(gesture.dx) < 10;
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+
+      onMoveShouldSetPanResponder: (_, g) => {
+        return g.dy > 6 && Math.abs(g.dx) < 10;
       },
 
-      onPanResponderMove: (_, gesture) => {
-        if (gesture.dy > 0) {
-          proSlideAnim.setValue(gesture.dy);
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) {
+          proSlideAnim.setValue(g.dy);
         }
       },
 
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dy > 120) {
-          // если сильно потянули — закрываем
+      onPanResponderRelease: (_, g) => {
+        // учитываем скорость и дистанцию
+        const shouldClose = g.dy > 120 || g.vy > 1.2;
+        if (shouldClose) {
           Animated.timing(proSlideAnim, {
             toValue: screenHeight,
             duration: 200,
             useNativeDriver: true,
           }).start(() => setShowProModal(false));
         } else {
-          // иначе возвращаем назад (spring)
           Animated.spring(proSlideAnim, {
             toValue: 0,
             useNativeDriver: true,
-            damping: 20,
-            stiffness: 150,
+            damping: 22,
+            stiffness: 180,
           }).start();
         }
       },
@@ -484,40 +517,47 @@ const YouTubeCreatorApp = () => {
   };
 
   useEffect(() => {
-    Animated.timing(loginSlideAnim, {
-      toValue: showLoginModal ? 0 : screenHeight,
-      duration: showLoginModal ? 300 : 200,
-      useNativeDriver: true,
-    }).start();
+    if (showLoginModal) {
+      loginSlideAnim.setValue(screenHeight);
+      Animated.spring(loginSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 22,
+        stiffness: 180,
+        mass: 1,
+      }).start();
+    }
   }, [showLoginModal]);
 
   const loginPanResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) => {
-        return gesture.dy > 10 && Math.abs(gesture.dx) < 10;
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+
+      onMoveShouldSetPanResponder: (_, g) => {
+        return g.dy > 6 && Math.abs(g.dx) < 10;
       },
 
-      onPanResponderMove: (_, gesture) => {
-        if (gesture.dy > 0) {
-          loginSlideAnim.setValue(gesture.dy);
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) {
+          loginSlideAnim.setValue(g.dy);
         }
       },
 
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dy > 120) {
-          // если сильно потянули — закрываем
+      onPanResponderRelease: (_, g) => {
+        const shouldClose = g.dy > 120 || g.vy > 1.2;
+        if (shouldClose) {
           Animated.timing(loginSlideAnim, {
             toValue: screenHeight,
             duration: 200,
             useNativeDriver: true,
           }).start(() => setShowLoginModal(false));
         } else {
-          // иначе возвращаем назад (spring)
           Animated.spring(loginSlideAnim, {
             toValue: 0,
             useNativeDriver: true,
-            damping: 20,
-            stiffness: 150,
+            damping: 22,
+            stiffness: 180,
           }).start();
         }
       },
@@ -531,7 +571,6 @@ const YouTubeCreatorApp = () => {
       useNativeDriver: true,
     }).start(() => setShowLoginModal(false));
   };
-
 
   const filteredNiches = allNiches.filter((niche) =>
     niche.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -595,6 +634,15 @@ const YouTubeCreatorApp = () => {
     }, 1500);
   };
 
+  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+const [chartData] = useState(() =>
+  days.map((day) => ({
+    day,
+    value: Math.random() * 100,
+  }))
+);
+
   const saveScript = () => {
     if (generatedScript) {
       const scriptWithDate = { ...generatedScript, savedAt: new Date() };
@@ -614,14 +662,12 @@ const YouTubeCreatorApp = () => {
   };
 
   const currentTip = tips[currentTipIndex];
-  
 
   const HomeScreen = () => (
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
       scrollEnabled={true}
-      
     >
       <TouchableOpacity
         style={styles.statsCard}
@@ -686,43 +732,6 @@ const YouTubeCreatorApp = () => {
           </TouchableOpacity>
         </View>
       </View>
-
-<View style={styles.TipCarouselContainer}>
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => {
-          const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
-          setCurrentTipIndex(newIndex);
-        }}
-      >
-        {tips.map((tip, idx) => (
-          <View key={`tip-${idx}`} style={[styles.tipCard, { width: width - 48 }]}>
-            <View style={styles.tipContent}>
-              <Text style={styles.tipTitle}>{tip.emoji} {tip.title}</Text>
-              <Text style={styles.tipText}>{tip.text}</Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
-      
-      <View style={styles.tipFooter}>
-        <Text style={styles.tipLink}>Узнать больше →</Text>
-        <View style={styles.dotsContainer}>
-          {tips.map((_, idx) => (
-            <TouchableOpacity
-              key={`dot-${idx}`}
-              onPress={() => setCurrentTipIndex(idx)}
-              style={[styles.dot, idx === currentTipIndex && styles.dotActive]}
-              activeOpacity={0.7}
-            />
-          ))}
-        </View>
-      </View>
-    </View>
     </ScrollView>
   );
 
@@ -735,21 +744,12 @@ const YouTubeCreatorApp = () => {
         </Text>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Search color="#9ca3af" size={20} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Поиск ниш..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-      </View>
+<SearchBar value={searchQuery} onChange={onChangeSearch} />
 
       <ScrollView
         style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {filteredNiches.length === 0 ? (
           <View style={styles.emptyState}>
@@ -1090,24 +1090,23 @@ const YouTubeCreatorApp = () => {
         </View>
       </View>
 
-      <View style={styles.chartCard}>
-        <View style={styles.chartHeader}>
-          <TrendingUp color="#9333ea" size={20} />
-          <Text style={styles.chartTitle}>Рост по дням</Text>
-        </View>
-        {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day, idx) => {
-          const value = Math.random() * 100;
-          return (
-            <View key={`chart-${day}-${idx}`} style={styles.chartRow}>
-              <Text style={styles.chartDay}>{day}</Text>
-              <View style={styles.chartBarContainer}>
-                <View style={[styles.chartBar, { width: `${value}%` }]} />
-              </View>
-              <Text style={styles.chartValue}>{Math.floor(value * 100)}</Text>
-            </View>
-          );
-        })}
+<View style={styles.chartCard}>
+  <View style={styles.chartHeader}>
+    <TrendingUp color="#9333ea" size={20} />
+    <Text style={styles.chartTitle}>Рост по дням</Text>
+  </View>
+
+  {chartData.map(({ day, value }, idx) => (
+    <View key={`chart-${day}-${idx}`} style={styles.chartRow}>
+      <Text style={styles.chartDay}>{day}</Text>
+      <View style={styles.chartBarContainer}>
+        <View style={[styles.chartBar, { width: `${value}%` }]} />
       </View>
+      <Text style={styles.chartValue}>{Math.floor(value)}</Text>
+    </View>
+  ))}
+</View>
+
 
       <View style={styles.recommendationsCard}>
         <View style={styles.recommendationsHeader}>
@@ -1216,28 +1215,36 @@ const YouTubeCreatorApp = () => {
       {/* Menu Overlay */}
       <Modal
         visible={menuOpen}
-        transparent={true}
+        transparent
         animationType="none"
-        onRequestClose={() => setMenuOpen(false)}
+        onRequestClose={closeMenu}
       >
         <View style={styles.menuOverlay}>
+          {/* overlay */}
           <TouchableOpacity
             style={StyleSheet.absoluteFill}
             activeOpacity={1}
-            onPress={() => setMenuOpen(false)}
+            onPress={closeMenu}
           />
+
+          {/* menu */}
           <Animated.View
             style={[
               styles.menuContent,
-              { transform: [{ translateX: menuSlideAnim }] },
+              {
+                paddingTop: insets.top + 16,
+                paddingBottom: insets.bottom + 16,
+                transform: [{ translateX: menuSlideAnim }],
+              },
             ]}
           >
             <View style={styles.menuHeader}>
               <Text style={styles.menuTitle}>Меню</Text>
-              <TouchableOpacity onPress={() => setMenuOpen(false)}>
+              <TouchableOpacity onPress={closeMenu}>
                 <X color="#000" size={24} />
               </TouchableOpacity>
             </View>
+
             <View style={styles.menuItems}>
               <TouchableOpacity
                 style={styles.menuItemLogin}
@@ -1283,7 +1290,7 @@ const YouTubeCreatorApp = () => {
         visible={showProModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowProModal(false)}
+        onRequestClose={closeProModal}
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
@@ -1400,7 +1407,7 @@ const YouTubeCreatorApp = () => {
         visible={showLoginModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowLoginModal(false)}
+        onRequestClose={closeLoginModal}
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
@@ -1630,13 +1637,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 280,
     backgroundColor: "#fff",
-    padding: 24,
+
+    paddingHorizontal: 24,
+    paddingTop: 16, // базовый
+    paddingBottom: 16,
+
     shadowColor: "#000",
     shadowOffset: { width: -2, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 5,
   },
+
   menuHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1800,17 +1812,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
   },
-    TipCarouselContainer: {
-        backgroundColor: "#faf5ff",
+  TipCarouselContainer: {
+    backgroundColor: "#faf5ff",
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
     borderColor: "#e9d5ff",
     marginBottom: 24,
   },
-  tipCard: {
-
-  },
+  tipCard: {},
   tipContent: {
     marginBottom: 12,
   },
@@ -2009,7 +2019,7 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 10,
+    zIndex: 100,
   },
 
   handleBar: {
@@ -2019,7 +2029,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 24,
-    zIndex: 10,
+    zIndex: 100,
   },
   modalHeader: {
     flexDirection: "row",
@@ -2693,7 +2703,6 @@ const styles = StyleSheet.create({
   navTextActive: {
     color: "#9333ea",
   },
-
 });
 
 export default YouTubeCreatorApp;
