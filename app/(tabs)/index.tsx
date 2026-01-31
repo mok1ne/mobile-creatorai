@@ -13,12 +13,14 @@ import {
   Settings,
   Sparkles,
   Trash2,
+  Moon,
+  Sun,
   TrendingUp,
   X,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Animated,
   Dimensions,
@@ -33,7 +35,6 @@ import {
 } from "react-native";
 
 const { width } = Dimensions.get("window");
-
 
 // Типы данных
 interface Niche {
@@ -75,7 +76,6 @@ const YouTubeCreatorApp = () => {
   const [selectedNiche, setSelectedNiche] = useState<Niche | null>(null);
   const [generatedScript, setGeneratedScript] =
     useState<GeneratedScript | null>(null);
-
   const [savedScripts, setSavedScripts] = useState<GeneratedScript[]>([]);
   const [showSavedScripts, setShowSavedScripts] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -84,32 +84,29 @@ const YouTubeCreatorApp = () => {
   const [showProModal, setShowProModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
 
+  const SearchBar = React.memo(
+    ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
+      return (
+        <View style={styles.searchContainer}>
+          <Search color="#9ca3af" size={20} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Поиск ниш..."
+            value={value}
+            onChangeText={onChange}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+            blurOnSubmit={false}
+          />
+        </View>
+      );
+    },
+  );
 
-const SearchBar = React.memo(
-  ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
-    return (
-      <View style={styles.searchContainer}>
-        <Search color="#9ca3af" size={20} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Поиск ниш..."
-          value={value}
-          onChangeText={onChange}
-          autoCorrect={false}
-          autoCapitalize="none"
-          returnKeyType="search"
-          blurOnSubmit={false}
-        />
-      </View>
-    );
-  }
-);
-
-
-  
-const onChangeSearch = useCallback((text: string) => {
-  setSearchQuery(text);
-}, []);
+  const onChangeSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+  }, []);
   // Расширенный список ниш
   const allNiches: Niche[] = [
     {
@@ -378,6 +375,29 @@ const onChangeSearch = useCallback((text: string) => {
     });
   };
 
+  // ================Темная тема
+
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
+  const iconColorMenu = isDarkTheme ? "#fff" : "#000";
+  const iconColorSettings = isDarkTheme ? "#dfdfdf" : "#4b5563";
+  const themeAnimValue = useRef(
+    new Animated.Value(isDarkTheme ? 1 : 0),
+  ).current;
+
+  // useEffect для анимации при переключении темы
+  useEffect(() => {
+    Animated.spring(themeAnimValue, {
+      toValue: isDarkTheme ? 1 : 0,
+      useNativeDriver: false,
+      damping: 15,
+      stiffness: 150,
+    }).start();
+  }, [isDarkTheme]);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
+
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -636,12 +656,12 @@ const onChangeSearch = useCallback((text: string) => {
 
   const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
-const [chartData] = useState(() =>
-  days.map((day) => ({
-    day,
-    value: Math.random() * 100,
-  }))
-);
+  const [chartData] = useState(() =>
+    days.map((day) => ({
+      day,
+      value: Math.random() * 100,
+    })),
+  );
 
   const saveScript = () => {
     if (generatedScript) {
@@ -696,39 +716,59 @@ const [chartData] = useState(() =>
       </TouchableOpacity>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Быстрые действия</Text>
+        <Text
+          style={[styles.sectionTitle, isDarkTheme && styles.sectionTitleDark]}
+        >
+          Быстрые действия
+        </Text>
         <View style={styles.actionsGrid}>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, isDarkTheme && styles.actionCardDark]}
             onPress={() => setActiveTab("niches")}
             activeOpacity={0.7}
           >
             <Search color="#9333ea" size={32} />
-            <Text style={styles.actionText}>Найти нишу</Text>
+            <Text
+              style={[styles.actionText, isDarkTheme && styles.actionTextDark]}
+            >
+              Найти нишу
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, isDarkTheme && styles.actionCardDark]}
             onPress={() => setActiveTab("scripts")}
             activeOpacity={0.7}
           >
             <FileText color="#2563eb" size={32} />
-            <Text style={styles.actionText}>Сценарий</Text>
+            <Text
+              style={[styles.actionText, isDarkTheme && styles.actionTextDark]}
+            >
+              Сценарий
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, isDarkTheme && styles.actionCardDark]}
             onPress={() => setActiveTab("analytics")}
             activeOpacity={0.7}
           >
             <BarChart3 color="#16a34a" size={32} />
-            <Text style={styles.actionText}>Аналитика</Text>
+            <Text
+              style={[styles.actionText, isDarkTheme && styles.actionTextDark]}
+            >
+              Аналитика
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, isDarkTheme && styles.actionCardDark]}
             onPress={() => setActiveTab("optimization")}
             activeOpacity={0.7}
           >
             <Sparkles color="#ea580c" size={32} />
-            <Text style={styles.actionText}>Оптимизация</Text>
+            <Text
+              style={[styles.actionText, isDarkTheme && styles.actionTextDark]}
+            >
+              Оптимизация
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -744,7 +784,7 @@ const [chartData] = useState(() =>
         </Text>
       </View>
 
-<SearchBar value={searchQuery} onChange={onChangeSearch} />
+      <SearchBar value={searchQuery} onChange={onChangeSearch} />
 
       <ScrollView
         style={styles.scrollContent}
@@ -1090,23 +1130,22 @@ const [chartData] = useState(() =>
         </View>
       </View>
 
-<View style={styles.chartCard}>
-  <View style={styles.chartHeader}>
-    <TrendingUp color="#9333ea" size={20} />
-    <Text style={styles.chartTitle}>Рост по дням</Text>
-  </View>
+      <View style={styles.chartCard}>
+        <View style={styles.chartHeader}>
+          <TrendingUp color="#9333ea" size={20} />
+          <Text style={styles.chartTitle}>Рост по дням</Text>
+        </View>
 
-  {chartData.map(({ day, value }, idx) => (
-    <View key={`chart-${day}-${idx}`} style={styles.chartRow}>
-      <Text style={styles.chartDay}>{day}</Text>
-      <View style={styles.chartBarContainer}>
-        <View style={[styles.chartBar, { width: `${value}%` }]} />
+        {chartData.map(({ day, value }, idx) => (
+          <View key={`chart-${day}-${idx}`} style={styles.chartRow}>
+            <Text style={styles.chartDay}>{day}</Text>
+            <View style={styles.chartBarContainer}>
+              <View style={[styles.chartBar, { width: `${value}%` }]} />
+            </View>
+            <Text style={styles.chartValue}>{Math.floor(value)}</Text>
+          </View>
+        ))}
       </View>
-      <Text style={styles.chartValue}>{Math.floor(value)}</Text>
-    </View>
-  ))}
-</View>
-
 
       <View style={styles.recommendationsCard}>
         <View style={styles.recommendationsHeader}>
@@ -1184,9 +1223,9 @@ const [chartData] = useState(() =>
   );
 
   return (
-    <View style={styles.app}>
+    <View style={[styles.app, isDarkTheme && styles.appDark]}>
       {/* Header */}
-      <View style={styles.appHeader}>
+      <View style={[styles.appHeader, isDarkTheme && styles.appHeaderDark]}>
         <TouchableOpacity
           style={styles.appHeaderContent}
           onPress={() => setActiveTab("home")}
@@ -1196,8 +1235,17 @@ const [chartData] = useState(() =>
             <Camera color="#fff" size={24} />
           </View>
           <View>
-            <Text style={styles.appTitle}>Creator AI</Text>
-            <Text style={styles.appSubtitle}>Ваш помощник</Text>
+            <Text style={[styles.appTitle, isDarkTheme && styles.appTitleDark]}>
+              Creator AI
+            </Text>
+            <Text
+              style={[
+                styles.appSubtitle,
+                isDarkTheme && styles.appSubtitleDark,
+              ]}
+            >
+              Ваш помощник
+            </Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -1205,9 +1253,9 @@ const [chartData] = useState(() =>
           style={styles.menuButton}
         >
           {menuOpen ? (
-            <X color="#000" size={24} />
+            <X fill={iconColorMenu} stroke={iconColorMenu} size={24} />
           ) : (
-            <Menu color="#000" size={24} />
+            <Menu fill={iconColorMenu} stroke={iconColorMenu} size={24} />
           )}
         </TouchableOpacity>
       </View>
@@ -1236,18 +1284,19 @@ const [chartData] = useState(() =>
                 paddingBottom: insets.bottom + 16,
                 transform: [{ translateX: menuSlideAnim }],
               },
+              isDarkTheme && styles.menuContentDark
             ]}
           >
             <View style={styles.menuHeader}>
-              <Text style={styles.menuTitle}>Меню</Text>
+              <Text style={[styles.menuTitle, isDarkTheme && styles.menuTitleDark]}>Меню</Text>
               <TouchableOpacity onPress={closeMenu}>
-                <X color="#000" size={24} />
+                <X fill={iconColorMenu} stroke={iconColorMenu} size={24} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.menuItems}>
               <TouchableOpacity
-                style={styles.menuItemLogin}
+                style={[styles.menuItemLogin, isDarkTheme && styles.menuItemLoginDark]}
                 activeOpacity={0.7}
                 onPress={() => {
                   setMenuOpen(false);
@@ -1255,19 +1304,60 @@ const [chartData] = useState(() =>
                 }}
               >
                 <LogIn color="#9333ea" size={20} />
-                <Text style={styles.menuItemLoginText}>Войти в аккаунт</Text>
+                <Text style={[styles.menuItemLoginText, isDarkTheme && styles.menuItemLoginTextDark]}>Войти в аккаунт</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
-                <Settings color="#4b5563" size={20} />
-                <Text style={styles.menuItemText}>Настройки</Text>
+                <Settings stroke={iconColorSettings} size={20} />
+                <Text style={[styles.menuItemText, isDarkTheme && styles.menuItemTextDark]}>Настройки</Text>
               </TouchableOpacity>
 
-              <View style={styles.menuItemPlan}>
-                <Text style={styles.menuItemTitle}>🆓 Бесплатный план</Text>
-                <Text style={styles.menuItemSubtext}>
+              <View style={[styles.menuItemPlan, isDarkTheme && styles.menuItemPlanDark]}>
+                <Text style={[styles.menuItemTitle, isDarkTheme && styles.menuItemTitleDark]}>🆓 Бесплатный план</Text>
+                <Text style={[styles.menuItemSubtext, isDarkTheme && styles.menuItemSubtextDark]}>
                   3/5 сценариев использовано
                 </Text>
+              </View>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={toggleTheme}
+                  style={styles.themeToggleContainer}
+                  activeOpacity={0.8}
+                >
+                  <Animated.View
+                    style={[
+                      styles.themeToggle,
+                      {
+                        backgroundColor: themeAnimValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["#e0e7ff", "#1e1b4b"],
+                        }),
+                      },
+                    ]}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.themeToggleCircle,
+                        {
+                          transform: [
+                            {
+                              translateX: themeAnimValue.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [2, 26],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    >
+                      {isDarkTheme ? (
+                        <Moon color="#fbbf24" size={16} />
+                      ) : (
+                        <Sun color="#f59e0b" size={16} />
+                      )}
+                    </Animated.View>
+                  </Animated.View>
+                </TouchableOpacity>
               </View>
 
               <TouchableOpacity
@@ -1510,7 +1600,7 @@ const [chartData] = useState(() =>
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, isDarkTheme && styles.bottomNavDark]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => setActiveTab("home")}
@@ -1589,9 +1679,40 @@ const [chartData] = useState(() =>
 };
 
 const styles = StyleSheet.create({
+  themeToggleContainer: {
+    padding: 4,
+  },
+  themeToggle: {
+    width: 56,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  themeToggleCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
   app: {
     flex: 1,
     backgroundColor: "#f9fafb",
+  },
+  appDark: {
+    flex: 1,
+    backgroundColor: "#333333",
   },
   appHeader: {
     backgroundColor: "#fff",
@@ -1599,6 +1720,17 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f3f4f6",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  appHeaderDark: {
+    backgroundColor: "#1f1f1f",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#313233",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -1618,9 +1750,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1f2937",
   },
+  appTitleDark: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#c7d3e4",
+  },
+
   appSubtitle: {
     fontSize: 12,
     color: "#6b7280",
+  },
+  appSubtitleDark: {
+    fontSize: 12,
+    color: "#9fa2aa",
   },
   menuButton: {
     padding: 8,
@@ -1649,6 +1791,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 
+  menuContentDark: {
+backgroundColor: "#333333",
+  },
+
   menuHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1659,6 +1805,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
+  },
+  menuTitleDark: {
+    color: "#ebebeb",
   },
   menuItems: {
     gap: 8,
@@ -1675,10 +1824,16 @@ const styles = StyleSheet.create({
     borderColor: "#e9d5ff",
     marginBottom: 8,
   },
+  menuItemLoginDark: {
+    backgroundColor: "#4e4e4e",
+  },
   menuItemLoginText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#9333ea",
+  },
+  menuItemLoginTextDark: {
+color: "#d4d4d4"
   },
   menuItem: {
     flexDirection: "row",
@@ -1693,21 +1848,32 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1f2937",
   },
+  menuItemTextDark: {
+    color: "#ddd",
+  },
   menuItemPlan: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: "#f9fafb",
   },
+  menuItemPlanDark: {backgroundColor: "#4e4e4e", },
   menuItemTitle: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1f2937",
   },
+
+  menuItemTitleDark: {
+    color: "#f0f0f0",
+  },
   menuItemSubtext: {
     fontSize: 12,
     color: "#6b7280",
     marginTop: 4,
+  },
+  menuItemSubtextDark: {
+    color: "#d6d6d6",
   },
   menuItemPro: {
     backgroundColor: "#9333ea",
@@ -1722,6 +1888,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
+  headerActions: {},
+  themeButton: {},
   content: {
     flex: 1,
   },
@@ -1788,6 +1956,12 @@ const styles = StyleSheet.create({
     color: "#1f2937",
     marginBottom: 12,
   },
+  sectionTitleDark: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#e6e6e6",
+    marginBottom: 12,
+  },
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1805,10 +1979,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  actionCardDark: {
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 16,
+    width: (width - 60) / 2,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   actionText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#1f2937",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  actionTextDark: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#dddddd",
     marginTop: 8,
     textAlign: "center",
   },
@@ -2686,6 +2879,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+  },
+  bottomNavDark: {
+    flexDirection: "row",
+    backgroundColor: "rgb(31 31 31)",
+    borderTopWidth: 1,
+    borderTopColor: "rgb(49 50 51)",
     paddingVertical: 8,
     paddingHorizontal: 24,
   },
