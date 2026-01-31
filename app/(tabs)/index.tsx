@@ -8,19 +8,17 @@ import {
   FileText,
   LogIn,
   Menu,
+  Moon,
   Play,
   Search,
   Settings,
   Sparkles,
-  Trash2,
-  Moon,
   Sun,
+  Trash2,
   TrendingUp,
   X,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Animated,
   Dimensions,
@@ -33,6 +31,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -83,14 +82,35 @@ const YouTubeCreatorApp = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
   const [showProModal, setShowProModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  // ================Темная тема
 
+  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
+  const iconColorMenu = isDarkTheme ? "#fff" : "#000";
+  const iconColorSettings = isDarkTheme ? "#dfdfdf" : "#4b5563";
+  const themeAnimValue = useRef(
+    new Animated.Value(isDarkTheme ? 1 : 0),
+  ).current;
+
+  // useEffect для анимации при переключении темы
+  useEffect(() => {
+    Animated.spring(themeAnimValue, {
+      toValue: isDarkTheme ? 1 : 0,
+      useNativeDriver: false,
+      damping: 15,
+      stiffness: 150,
+    }).start();
+  }, [isDarkTheme]);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
   const SearchBar = React.memo(
     ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
       return (
         <View style={styles.searchContainer}>
           <Search color="#9ca3af" size={20} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, isDarkTheme && styles.searchInputDark]}
             placeholder="Поиск ниш..."
             value={value}
             onChangeText={onChange}
@@ -373,29 +393,6 @@ const YouTubeCreatorApp = () => {
     }).start(() => {
       setMenuOpen(false);
     });
-  };
-
-  // ================Темная тема
-
-  const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
-  const iconColorMenu = isDarkTheme ? "#fff" : "#000";
-  const iconColorSettings = isDarkTheme ? "#dfdfdf" : "#4b5563";
-  const themeAnimValue = useRef(
-    new Animated.Value(isDarkTheme ? 1 : 0),
-  ).current;
-
-  // useEffect для анимации при переключении темы
-  useEffect(() => {
-    Animated.spring(themeAnimValue, {
-      toValue: isDarkTheme ? 1 : 0,
-      useNativeDriver: false,
-      damping: 15,
-      stiffness: 150,
-    }).start();
-  }, [isDarkTheme]);
-
-  const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
   };
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -685,7 +682,7 @@ const YouTubeCreatorApp = () => {
 
   const HomeScreen = () => (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, isDarkTheme && styles.containerDark]}
       showsVerticalScrollIndicator={false}
       scrollEnabled={true}
     >
@@ -776,10 +773,19 @@ const YouTubeCreatorApp = () => {
   );
 
   const NichesScreen = () => (
-    <View style={styles.fullScreen}>
+    <View style={[styles.fullScreen, isDarkTheme && styles.fullScreenDark]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Анализ ниш</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text
+          style={[styles.headerTitle, isDarkTheme && styles.headerTitleDark]}
+        >
+          Анализ ниш
+        </Text>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            isDarkTheme && styles.headerSubtitleDark,
+          ]}
+        >
           Найдите перспективную нишу для вашего канала
         </Text>
       </View>
@@ -792,17 +798,30 @@ const YouTubeCreatorApp = () => {
         keyboardShouldPersistTaps="handled"
       >
         {filteredNiches.length === 0 ? (
-          <View style={styles.emptyState}>
+          <View
+            style={[styles.emptyState, isDarkTheme && styles.emptyStateDark]}
+          >
             <Search color="#d1d5db" size={48} />
-            <Text style={styles.emptyText}>Ниши не найдены</Text>
-            <Text style={styles.emptySubtext}>Попробуйте изменить запрос</Text>
+            <Text
+              style={[styles.emptyText, isDarkTheme && styles.emptyTextDark]}
+            >
+              Ниши не найдены
+            </Text>
+            <Text
+              style={[
+                styles.emptySubtext,
+                isDarkTheme && styles.emptySubtextDark,
+              ]}
+            >
+              Попробуйте изменить запрос
+            </Text>
           </View>
         ) : (
           <View style={styles.nichesList}>
             {filteredNiches.map((niche) => (
               <TouchableOpacity
                 key={niche.id}
-                style={styles.nicheCard}
+                style={[styles.nicheCard, isDarkTheme && styles.nicheCardDark]}
                 onPress={() => setSelectedNiche(niche)}
                 activeOpacity={0.7}
               >
@@ -810,7 +829,14 @@ const YouTubeCreatorApp = () => {
                   <View style={styles.nicheInfo}>
                     <Text style={styles.nicheIcon}>{niche.icon}</Text>
                     <View>
-                      <Text style={styles.nicheName}>{niche.name}</Text>
+                      <Text
+                        style={[
+                          styles.nicheName,
+                          isDarkTheme && styles.nicheNameDark,
+                        ]}
+                      >
+                        {niche.name}
+                      </Text>
                       <View
                         style={[
                           styles.competitionBadge,
@@ -842,12 +868,38 @@ const YouTubeCreatorApp = () => {
                 </View>
                 <View style={styles.nicheStats}>
                   <View style={styles.nicheStat}>
-                    <Text style={styles.nicheStatLabel}>CPM</Text>
-                    <Text style={styles.nicheStatValue}>{niche.cpm}</Text>
+                    <Text
+                      style={[
+                        styles.nicheStatLabel,
+                        isDarkTheme && styles.nicheStatLabelDark,
+                      ]}
+                    >
+                      CPM
+                    </Text>
+                    <Text
+                      style={[
+                        styles.nicheStatValue,
+                        isDarkTheme && styles.nicheStatValueDark,
+                      ]}
+                    >
+                      {niche.cpm}
+                    </Text>
                   </View>
                   <View style={styles.nicheStat}>
-                    <Text style={styles.nicheStatLabel}>Рост</Text>
-                    <Text style={styles.nicheStatValueGreen}>
+                    <Text
+                      style={[
+                        styles.nicheStatLabel,
+                        isDarkTheme && styles.nicheStatLabelDark,
+                      ]}
+                    >
+                      Рост
+                    </Text>
+                    <Text
+                      style={[
+                        styles.nicheStatValueGreen,
+                        isDarkTheme && styles.nicheStatValueGreenDark,
+                      ]}
+                    >
                       {niche.growth}
                     </Text>
                   </View>
@@ -877,6 +929,7 @@ const YouTubeCreatorApp = () => {
             style={[
               styles.modalContent,
               { transform: [{ translateY: slideAnim }] },
+              isDarkTheme && styles.modalContentDark,
             ]}
           >
             {/* HANDLE */}
@@ -892,24 +945,62 @@ const YouTubeCreatorApp = () => {
               <>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalIcon}>{selectedNiche.icon}</Text>
-                  <Text style={styles.modalTitle}>{selectedNiche.name}</Text>
+                  <Text
+                    style={[
+                      styles.modalTitle,
+                      isDarkTheme && styles.modalTitleDark,
+                    ]}
+                  >
+                    {selectedNiche.name}
+                  </Text>
                 </View>
 
                 <ScrollView
                   style={styles.modalBody}
                   showsVerticalScrollIndicator={false}
                 >
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionTitle}>📊 Метрики</Text>
+                  <View
+                    style={[
+                      styles.modalSection,
+                      isDarkTheme && styles.modalSectionDark,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.modalSectionTitle,
+                        isDarkTheme && styles.modalSectionTitleDark,
+                      ]}
+                    >
+                      📊 Метрики
+                    </Text>
                     <View style={styles.modalGrid}>
                       <View>
-                        <Text style={styles.modalLabel}>CPM</Text>
-                        <Text style={styles.modalValue}>
+                        <Text
+                          style={[
+                            styles.modalLabel,
+                            isDarkTheme && styles.modalLabelDark,
+                          ]}
+                        >
+                          CPM
+                        </Text>
+                        <Text
+                          style={[
+                            styles.modalValue,
+                            isDarkTheme && styles.modalValueDark,
+                          ]}
+                        >
                           {selectedNiche.cpm}
                         </Text>
                       </View>
                       <View>
-                        <Text style={styles.modalLabel}>Рост рынка</Text>
+                        <Text
+                          style={[
+                            styles.modalLabel,
+                            isDarkTheme && styles.modalLabelDark,
+                          ]}
+                        >
+                          Рост рынка
+                        </Text>
                         <Text style={styles.modalValueGreen}>
                           {selectedNiche.growth}
                         </Text>
@@ -917,17 +1008,42 @@ const YouTubeCreatorApp = () => {
                     </View>
                   </View>
 
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionTitle}>
+                  <View
+                    style={[
+                      styles.modalSection,
+                      isDarkTheme && styles.modalSectionDark,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.modalSectionTitle,
+                        isDarkTheme && styles.modalSectionTitleDark,
+                      ]}
+                    >
                       💡 Рекомендации
                     </Text>
-                    <Text style={styles.recommendation}>
+                    <Text
+                      style={[
+                        styles.recommendation,
+                        isDarkTheme && styles.recommendationDark,
+                      ]}
+                    >
                       • Фокус на практичные советы
                     </Text>
-                    <Text style={styles.recommendation}>
+                    <Text
+                      style={[
+                        styles.recommendation,
+                        isDarkTheme && styles.recommendationDark,
+                      ]}
+                    >
                       • 45–60 секунд оптимально
                     </Text>
-                    <Text style={styles.recommendation}>
+                    <Text
+                      style={[
+                        styles.recommendation,
+                        isDarkTheme && styles.recommendationDark,
+                      ]}
+                    >
                       • Динамичный монтаж
                     </Text>
                   </View>
@@ -954,10 +1070,22 @@ const YouTubeCreatorApp = () => {
   );
 
   const ScriptsScreen = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, isDarkTheme && styles.containerDark]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Генератор сценариев</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text
+          style={[styles.headerTitle, isDarkTheme && styles.headerTitleDark]}
+        >
+          Генератор сценариев
+        </Text>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            isDarkTheme && styles.headerSubtitleDark,
+          ]}
+        >
           AI создаст детальный сценарий с описанием сцен
         </Text>
       </View>
@@ -986,9 +1114,21 @@ const YouTubeCreatorApp = () => {
                 activeOpacity={0.7}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.savedScriptTitle}>{script.title}</Text>
+                  <Text
+                    style={[
+                      styles.savedScriptTitle,
+                      isDarkTheme && styles.savedScriptTitleDark,
+                    ]}
+                  >
+                    {script.title}
+                  </Text>
                   {script.savedAt && (
-                    <Text style={styles.savedScriptDate}>
+                    <Text
+                      style={[
+                        styles.savedScriptDate,
+                        isDarkTheme && styles.savedScriptDateDark,
+                      ]}
+                    >
                       Сохранено:{" "}
                       {new Date(script.savedAt).toLocaleDateString("ru-RU")}
                     </Text>
@@ -1008,12 +1148,27 @@ const YouTubeCreatorApp = () => {
         </View>
       ) : !generatedScript ? (
         <View>
-          <View style={styles.scriptPrompt}>
+          <View
+            style={[
+              styles.scriptPrompt,
+              isDarkTheme && styles.scriptPromptDark,
+            ]}
+          >
             <Sparkles color="#9333ea" size={48} />
-            <Text style={styles.scriptPromptTitle}>
+            <Text
+              style={[
+                styles.scriptPromptTitle,
+                isDarkTheme && styles.scriptPromptTitleDark,
+              ]}
+            >
               Выберите нишу для генерации
             </Text>
-            <Text style={styles.scriptPromptText}>
+            <Text
+              style={[
+                styles.scriptPromptText,
+                isDarkTheme && styles.scriptPromptTextDark,
+              ]}
+            >
               AI создаст полноценный сценарий с хуком, сценами и призывом к
               действию
             </Text>
@@ -1021,14 +1176,24 @@ const YouTubeCreatorApp = () => {
               {allNiches.slice(0, 5).map((niche) => (
                 <TouchableOpacity
                   key={niche.id}
-                  style={styles.nicheSelectCard}
+                  style={[
+                    styles.nicheSelectCard,
+                    isDarkTheme && styles.nicheSelectCardDark,
+                  ]}
                   onPress={() => generateScript(niche)}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
                   <View style={styles.nicheSelectContent}>
                     <Text style={styles.nicheSelectIcon}>{niche.icon}</Text>
-                    <Text style={styles.nicheSelectName}>{niche.name}</Text>
+                    <Text
+                      style={[
+                        styles.nicheSelectName,
+                        isDarkTheme && styles.nicheSelectNameDark,
+                      ]}
+                    >
+                      {niche.name}
+                    </Text>
                   </View>
                   <ChevronRight color="#9ca3af" size={20} />
                 </TouchableOpacity>
@@ -1037,8 +1202,20 @@ const YouTubeCreatorApp = () => {
           </View>
 
           {loading && (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>AI создаёт сценарий...</Text>
+            <View
+              style={[
+                styles.loadingContainer,
+                isDarkTheme && styles.loadingContainerDark,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.loadingText,
+                  isDarkTheme && styles.loadingTextDark,
+                ]}
+              >
+                AI создаёт сценарий...
+              </Text>
             </View>
           )}
         </View>
@@ -1052,28 +1229,91 @@ const YouTubeCreatorApp = () => {
           </View>
 
           {generatedScript.scenes.map((scene, idx) => (
-            <View key={`scene-${idx}`} style={styles.sceneCard}>
+            <View
+              key={`scene-${idx}`}
+              style={[styles.sceneCard, isDarkTheme && styles.sceneCardDark]}
+            >
               <View style={styles.sceneHeader}>
                 <View>
-                  <Text style={styles.sceneTime}>{scene.time}</Text>
-                  <Text style={styles.sceneType}>{scene.type}</Text>
+                  <Text
+                    style={[
+                      styles.sceneTime,
+                      isDarkTheme && styles.sceneTimeDark,
+                    ]}
+                  >
+                    {scene.time}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.sceneType,
+                      isDarkTheme && styles.sceneTypeDark,
+                    ]}
+                  >
+                    {scene.type}
+                  </Text>
                 </View>
                 <Play color="#9ca3af" size={20} />
               </View>
               <View style={styles.sceneContent}>
-                <Text style={styles.sceneLabel}>💬 Текст:</Text>
-                <Text style={styles.sceneText}>{scene.text}</Text>
-                <Text style={styles.sceneLabel}>🎬 Визуал:</Text>
-                <Text style={styles.sceneText}>{scene.visual}</Text>
-                <Text style={styles.sceneLabel}>🎵 Музыка:</Text>
-                <Text style={styles.sceneText}>{scene.music}</Text>
+                <Text
+                  style={[
+                    styles.sceneLabel,
+                    isDarkTheme && styles.sceneLabelDark,
+                  ]}
+                >
+                  💬 Текст:
+                </Text>
+                <Text
+                  style={[
+                    styles.sceneText,
+                    isDarkTheme && styles.sceneTextDark,
+                  ]}
+                >
+                  {scene.text}
+                </Text>
+                <Text
+                  style={[
+                    styles.sceneLabel,
+                    isDarkTheme && styles.sceneLabelDark,
+                  ]}
+                >
+                  🎬 Визуал:
+                </Text>
+                <Text
+                  style={[
+                    styles.sceneText,
+                    isDarkTheme && styles.sceneTextDark,
+                  ]}
+                >
+                  {scene.visual}
+                </Text>
+                <Text
+                  style={[
+                    styles.sceneLabel,
+                    isDarkTheme && styles.sceneLabelDark,
+                  ]}
+                >
+                  🎵 Музыка:
+                </Text>
+                <Text
+                  style={[
+                    styles.sceneText,
+                    isDarkTheme && styles.sceneTextDark,
+                  ]}
+                >
+                  {scene.music}
+                </Text>
               </View>
             </View>
           ))}
 
-          <View style={styles.seoCard}>
-            <Text style={styles.seoTitle}>🏷️ SEO-оптимизация</Text>
-            <Text style={styles.seoLabel}>Теги:</Text>
+          <View style={[styles.seoCard, isDarkTheme && styles.seoCardDark]}>
+            <Text style={[styles.seoTitle, isDarkTheme && styles.seoTitleDark]}>
+              🏷️ SEO-оптимизация
+            </Text>
+            <Text style={[styles.seoLabel, isDarkTheme && styles.seoLabelDark]}>
+              Теги:
+            </Text>
             <View style={styles.tagsContainer}>
               {generatedScript.tags.map((tag, idx) => (
                 <View key={`tag-${idx}`} style={styles.tag}>
@@ -1081,19 +1321,37 @@ const YouTubeCreatorApp = () => {
                 </View>
               ))}
             </View>
-            <Text style={styles.seoLabel}>Описание:</Text>
-            <Text style={styles.seoText}>{generatedScript.description}</Text>
-            <Text style={styles.seoLabel}>⏰ Лучшее время публикации:</Text>
-            <Text style={styles.seoValue}>{generatedScript.bestTime}</Text>
+            <Text style={[styles.seoLabel, isDarkTheme && styles.seoLabelDark]}>
+              Описание:
+            </Text>
+            <Text style={[styles.seoText, isDarkTheme && styles.seoTextDark]}>
+              {generatedScript.description}
+            </Text>
+            <Text style={[styles.seoLabel, isDarkTheme && styles.seoLabelDark]}>
+              ⏰ Лучшее время публикации:
+            </Text>
+            <Text style={[styles.seoValue, isDarkTheme && styles.seoValueDark]}>
+              {generatedScript.bestTime}
+            </Text>
           </View>
 
           <View style={styles.scriptActions}>
             <TouchableOpacity
-              style={styles.secondaryButton}
+              style={[
+                styles.secondaryButton,
+                isDarkTheme && styles.secondaryButtonDark,
+              ]}
               onPress={() => setGeneratedScript(null)}
               activeOpacity={0.7}
             >
-              <Text style={styles.secondaryButtonText}>Новый сценарий</Text>
+              <Text
+                style={[
+                  styles.secondaryButtonText,
+                  isDarkTheme && styles.secondaryButtonTextDark,
+                ]}
+              >
+                Новый сценарий
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.primaryButton}
@@ -1109,58 +1367,126 @@ const YouTubeCreatorApp = () => {
   );
 
   const AnalyticsScreen = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, isDarkTheme && styles.containerDark]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Аналитика канала</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text
+          style={[styles.headerTitle, isDarkTheme && styles.headerTitleDark]}
+        >
+          Аналитика канала
+        </Text>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            isDarkTheme && styles.headerSubtitleDark,
+          ]}
+        >
           Подробная статистика и рекомендации
         </Text>
       </View>
 
       <View style={styles.metricsGrid}>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Удержание</Text>
-          <Text style={styles.metricValue}>{channelStats.avgRetention}</Text>
+        <View style={[styles.metricCard, isDarkTheme && styles.metricCardDark]}>
+          <Text
+            style={[styles.metricLabel, isDarkTheme && styles.metricLabelDark]}
+          >
+            Удержание
+          </Text>
+          <Text
+            style={[styles.metricValue, isDarkTheme && styles.metricValueDark]}
+          >
+            {channelStats.avgRetention}
+          </Text>
           <Text style={styles.metricChange}>+5% за неделю</Text>
         </View>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>CTR</Text>
-          <Text style={styles.metricValue}>{channelStats.avgCTR}</Text>
+        <View style={[styles.metricCard, isDarkTheme && styles.metricCardDark]}>
+          <Text
+            style={[styles.metricLabel, isDarkTheme && styles.metricLabelDark]}
+          >
+            CTR
+          </Text>
+          <Text
+            style={[styles.metricValue, isDarkTheme && styles.metricValueDark]}
+          >
+            {channelStats.avgCTR}
+          </Text>
           <Text style={styles.metricChange}>+1.2% за неделю</Text>
         </View>
       </View>
 
-      <View style={styles.chartCard}>
+      <View style={[styles.chartCard, isDarkTheme && styles.chartCardDark]}>
         <View style={styles.chartHeader}>
           <TrendingUp color="#9333ea" size={20} />
-          <Text style={styles.chartTitle}>Рост по дням</Text>
+          <Text
+            style={[styles.chartTitle, isDarkTheme && styles.chartTitleDark]}
+          >
+            Рост по дням
+          </Text>
         </View>
 
         {chartData.map(({ day, value }, idx) => (
           <View key={`chart-${day}-${idx}`} style={styles.chartRow}>
-            <Text style={styles.chartDay}>{day}</Text>
-            <View style={styles.chartBarContainer}>
+            <Text style={[styles.chartDay, isDarkTheme && styles.chartDayDark]}>
+              {day}
+            </Text>
+            <View
+              style={[
+                styles.chartBarContainer,
+                isDarkTheme && styles.chartBarContainerDark,
+              ]}
+            >
               <View style={[styles.chartBar, { width: `${value}%` }]} />
             </View>
-            <Text style={styles.chartValue}>{Math.floor(value)}</Text>
+            <Text
+              style={[styles.chartValue, isDarkTheme && styles.chartValueDark]}
+            >
+              {Math.floor(value)}
+            </Text>
           </View>
         ))}
       </View>
 
-      <View style={styles.recommendationsCard}>
+      <View
+        style={[
+          styles.recommendationsCard,
+          isDarkTheme && styles.recommendationsCardDark,
+        ]}
+      >
         <View style={styles.recommendationsHeader}>
           <Award color="#ea580c" size={20} />
-          <Text style={styles.recommendationsTitle}>
+          <Text
+            style={[
+              styles.recommendationsTitle,
+              isDarkTheme && styles.recommendationsTitleDark,
+            ]}
+          >
             Рекомендации для роста
           </Text>
         </View>
-        <Text style={styles.recommendationItem}>
+        <Text
+          style={[
+            styles.recommendationItem,
+            isDarkTheme && styles.recommendationItemDark,
+          ]}
+        >
           → Увеличьте частоту публикаций до 3-4 видео в неделю
         </Text>
-        <Text style={styles.recommendationItem}>
+        <Text
+          style={[
+            styles.recommendationItem,
+            isDarkTheme && styles.recommendationItemDark,
+          ]}
+        >
           → Работайте над удержанием первых 5 секунд
         </Text>
-        <Text style={styles.recommendationItem}>
+        <Text
+          style={[
+            styles.recommendationItem,
+            isDarkTheme && styles.recommendationItemDark,
+          ]}
+        >
           → Тестируйте превью с крупным текстом
         </Text>
       </View>
@@ -1168,10 +1494,22 @@ const YouTubeCreatorApp = () => {
   );
 
   const OptimizationScreen = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, isDarkTheme && styles.containerDark]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Оптимизация</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text
+          style={[styles.headerTitle, isDarkTheme && styles.headerTitleDark]}
+        >
+          Оптимизация
+        </Text>
+        <Text
+          style={[
+            styles.headerSubtitle,
+            isDarkTheme && styles.headerSubtitleDark,
+          ]}
+        >
           Улучшите производительность вашего канала
         </Text>
       </View>
@@ -1284,11 +1622,15 @@ const YouTubeCreatorApp = () => {
                 paddingBottom: insets.bottom + 16,
                 transform: [{ translateX: menuSlideAnim }],
               },
-              isDarkTheme && styles.menuContentDark
+              isDarkTheme && styles.menuContentDark,
             ]}
           >
             <View style={styles.menuHeader}>
-              <Text style={[styles.menuTitle, isDarkTheme && styles.menuTitleDark]}>Меню</Text>
+              <Text
+                style={[styles.menuTitle, isDarkTheme && styles.menuTitleDark]}
+              >
+                Меню
+              </Text>
               <TouchableOpacity onPress={closeMenu}>
                 <X fill={iconColorMenu} stroke={iconColorMenu} size={24} />
               </TouchableOpacity>
@@ -1296,7 +1638,10 @@ const YouTubeCreatorApp = () => {
 
             <View style={styles.menuItems}>
               <TouchableOpacity
-                style={[styles.menuItemLogin, isDarkTheme && styles.menuItemLoginDark]}
+                style={[
+                  styles.menuItemLogin,
+                  isDarkTheme && styles.menuItemLoginDark,
+                ]}
                 activeOpacity={0.7}
                 onPress={() => {
                   setMenuOpen(false);
@@ -1304,17 +1649,48 @@ const YouTubeCreatorApp = () => {
                 }}
               >
                 <LogIn color="#9333ea" size={20} />
-                <Text style={[styles.menuItemLoginText, isDarkTheme && styles.menuItemLoginTextDark]}>Войти в аккаунт</Text>
+                <Text
+                  style={[
+                    styles.menuItemLoginText,
+                    isDarkTheme && styles.menuItemLoginTextDark,
+                  ]}
+                >
+                  Войти в аккаунт
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
                 <Settings stroke={iconColorSettings} size={20} />
-                <Text style={[styles.menuItemText, isDarkTheme && styles.menuItemTextDark]}>Настройки</Text>
+                <Text
+                  style={[
+                    styles.menuItemText,
+                    isDarkTheme && styles.menuItemTextDark,
+                  ]}
+                >
+                  Настройки
+                </Text>
               </TouchableOpacity>
 
-              <View style={[styles.menuItemPlan, isDarkTheme && styles.menuItemPlanDark]}>
-                <Text style={[styles.menuItemTitle, isDarkTheme && styles.menuItemTitleDark]}>🆓 Бесплатный план</Text>
-                <Text style={[styles.menuItemSubtext, isDarkTheme && styles.menuItemSubtextDark]}>
+              <View
+                style={[
+                  styles.menuItemPlan,
+                  isDarkTheme && styles.menuItemPlanDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.menuItemTitle,
+                    isDarkTheme && styles.menuItemTitleDark,
+                  ]}
+                >
+                  🆓 Бесплатный план
+                </Text>
+                <Text
+                  style={[
+                    styles.menuItemSubtext,
+                    isDarkTheme && styles.menuItemSubtextDark,
+                  ]}
+                >
                   3/5 сценариев использовано
                 </Text>
               </View>
@@ -1392,6 +1768,7 @@ const YouTubeCreatorApp = () => {
             style={[
               styles.proModalContent,
               { transform: [{ translateY: proSlideAnim }] },
+              isDarkTheme && styles.proModalContentDark,
             ]}
           >
             <Animated.View
@@ -1401,41 +1778,67 @@ const YouTubeCreatorApp = () => {
             >
               <View style={styles.handleBar} />
             </Animated.View>
-            <Text style={styles.proModalTitle}>⭐ Выберите план</Text>
+            <Text
+              style={[
+                styles.proModalTitle,
+                isDarkTheme && styles.proModalTitleDark,
+              ]}
+            >
+              ⭐ Выберите план
+            </Text>
 
             <ScrollView
               showsVerticalScrollIndicator={false}
               style={{ maxHeight: "100%" }}
             >
-              <View style={styles.pricingCard}>
+              <View
+                style={[
+                  styles.pricingCard,
+                  isDarkTheme && styles.pricingCardDark,
+                ]}
+              >
                 <Text style={styles.pricingBadge}>ПОПУЛЯРНЫЙ</Text>
-                <Text style={styles.pricingName}>Pro</Text>
+                <Text
+                  style={[
+                    styles.pricingName,
+                    isDarkTheme && styles.pricingNameDark,
+                  ]}
+                >
+                  Pro
+                </Text>
                 <View style={styles.pricingPrice}>
                   <Text style={styles.pricingAmount}>$15</Text>
-                  <Text style={styles.pricingPeriod}>/месяц</Text>
+                  <Text
+                    style={[
+                      styles.pricingPeriod,
+                      isDarkTheme && styles.pricingPeriodDark,
+                    ]}
+                  >
+                    /месяц
+                  </Text>
                 </View>
                 <View style={styles.pricingFeatures}>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       Неограниченная генерация сценариев
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       Продвинутый анализ ниш
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       Полная аналитика канала
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       SEO-оптимизация
                     </Text>
                   </View>
@@ -1450,36 +1853,56 @@ const YouTubeCreatorApp = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={[styles.pricingCard, styles.pricingCardBusiness]}>
-                <Text style={styles.pricingName}>Business</Text>
+              <View
+                style={[
+                  styles.pricingCard,
+                  styles.pricingCardBusiness,
+                  isDarkTheme && styles.pricingCardDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pricingName,
+                    isDarkTheme && styles.pricingNameDark,
+                  ]}
+                >
+                  Business
+                </Text>
                 <View style={styles.pricingPrice}>
                   <Text style={styles.pricingAmount}>$35</Text>
-                  <Text style={styles.pricingPeriod}>/месяц</Text>
+                  <Text
+                    style={[
+                      styles.pricingPeriod,
+                      isDarkTheme && styles.pricingPeriodDark,
+                    ]}
+                  >
+                    /месяц
+                  </Text>
                 </View>
                 <View style={styles.pricingFeatures}>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>Всё из Pro +</Text>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>Всё из Pro +</Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       Управление несколькими каналами
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
                       Приоритетная поддержка
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={styles.pricingFeatureText}>API доступ</Text>
+                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>API доступ</Text>
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={styles.pricingButtonOutline}
+                  style={[styles.pricingButtonOutline]}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.pricingButtonOutlineText}>
@@ -1509,6 +1932,7 @@ const YouTubeCreatorApp = () => {
             style={[
               styles.loginModalContent,
               { transform: [{ translateY: loginSlideAnim }] },
+              isDarkTheme && styles.loginModalContentDark,
             ]}
           >
             <Animated.View
@@ -1518,8 +1942,20 @@ const YouTubeCreatorApp = () => {
             >
               <View style={styles.handleBar} />
             </Animated.View>
-            <Text style={styles.loginModalTitle}>🔐 Вход в аккаунт</Text>
-            <Text style={styles.loginModalSubtitle}>
+            <Text
+              style={[
+                styles.loginModalTitle,
+                isDarkTheme && styles.loginModalTitleDark,
+              ]}
+            >
+              🔐 Вход в аккаунт
+            </Text>
+            <Text
+              style={[
+                styles.loginModalSubtitle,
+                isDarkTheme && styles.loginModalSubtitleDark,
+              ]}
+            >
               Войдите, чтобы синхронизировать данные
             </Text>
 
@@ -1529,9 +1965,16 @@ const YouTubeCreatorApp = () => {
             >
               <View style={styles.loginForm}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Email</Text>
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      isDarkTheme && styles.inputLabelDark,
+                    ]}
+                  >
+                    Email
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, isDarkTheme && styles.inputDark]}
                     placeholder="your@email.com"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -1540,9 +1983,16 @@ const YouTubeCreatorApp = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Пароль</Text>
+                  <Text
+                    style={[
+                      styles.inputLabel,
+                      isDarkTheme && styles.inputLabelDark,
+                    ]}
+                  >
+                    Пароль
+                  </Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, isDarkTheme && styles.inputDark]}
                     placeholder="••••••••"
                     secureTextEntry
                     autoCapitalize="none"
@@ -1564,19 +2014,35 @@ const YouTubeCreatorApp = () => {
                 </View>
 
                 <TouchableOpacity
-                  style={styles.socialButton}
+                  style={[
+                    styles.socialButton,
+                    isDarkTheme && styles.socialButtonDark,
+                  ]}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.socialButtonText}>
+                  <Text
+                    style={[
+                      styles.socialButtonText,
+                      isDarkTheme && styles.socialButtonTextDark,
+                    ]}
+                  >
                     🔷 Войти через Google
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.socialButton}
+                  style={[
+                    styles.socialButton,
+                    isDarkTheme && styles.socialButtonDark,
+                  ]}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.socialButtonText}>
+                  <Text
+                    style={[
+                      styles.socialButtonText,
+                      isDarkTheme && styles.socialButtonTextDark,
+                    ]}
+                  >
                     📘 Войти через Facebook
                   </Text>
                 </TouchableOpacity>
@@ -1792,7 +2258,7 @@ const styles = StyleSheet.create({
   },
 
   menuContentDark: {
-backgroundColor: "#333333",
+    backgroundColor: "#333333",
   },
 
   menuHeader: {
@@ -1833,7 +2299,7 @@ backgroundColor: "#333333",
     color: "#9333ea",
   },
   menuItemLoginTextDark: {
-color: "#d4d4d4"
+    color: "#d4d4d4",
   },
   menuItem: {
     flexDirection: "row",
@@ -1857,7 +2323,7 @@ color: "#d4d4d4"
     borderRadius: 12,
     backgroundColor: "#f9fafb",
   },
-  menuItemPlanDark: {backgroundColor: "#4e4e4e", },
+  menuItemPlanDark: { backgroundColor: "#4e4e4e" },
   menuItemTitle: {
     fontSize: 14,
     fontWeight: "600",
@@ -2061,9 +2527,15 @@ color: "#d4d4d4"
     color: "#1f2937",
     marginBottom: 8,
   },
+  headerTitleDark: {
+    color: "#eeeeee",
+  },
   headerSubtitle: {
     fontSize: 14,
     color: "#6b7280",
+  },
+  headerSubtitleDark: {
+    color: "#d4d4d4",
   },
   searchContainer: {
     position: "relative",
@@ -2072,7 +2544,7 @@ color: "#d4d4d4"
   searchIcon: {
     position: "absolute",
     left: 16,
-    top: 14,
+    top: 13,
     zIndex: 1,
   },
   searchInput: {
@@ -2084,6 +2556,12 @@ color: "#d4d4d4"
     fontSize: 14,
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    color: "#5c5c5c",
+  },
+  searchInputDark: {
+    backgroundColor: "#5c5c5c",
+    borderColor: "#2b2b2b",
+    color: "#e0e0e0",
   },
   emptyState: {
     backgroundColor: "#fff",
@@ -2096,15 +2574,24 @@ color: "#d4d4d4"
     shadowRadius: 4,
     elevation: 3,
   },
+  emptyStateDark: {
+    backgroundColor: "#5c5c5c",
+  },
   emptyText: {
     fontSize: 14,
     color: "#6b7280",
     marginTop: 12,
   },
+  emptyTextDark: {
+    color: "#f3f3f3",
+  },
   emptySubtext: {
     fontSize: 12,
     color: "#9ca3af",
     marginTop: 4,
+  },
+  emptySubtextDark: {
+    color: "#cacaca",
   },
   nichesList: {
     gap: 12,
@@ -2119,6 +2606,9 @@ color: "#d4d4d4"
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  nicheCardDark: {
+    backgroundColor: "#5c5c5c",
   },
   nicheHeader: {
     flexDirection: "row",
@@ -2139,6 +2629,9 @@ color: "#d4d4d4"
     fontWeight: "bold",
     color: "#1f2937",
     marginBottom: 4,
+  },
+  nicheNameDark: {
+    color: "#f0f0f0",
   },
   competitionBadge: {
     paddingHorizontal: 8,
@@ -2185,14 +2678,23 @@ color: "#d4d4d4"
     color: "#6b7280",
     marginBottom: 2,
   },
+  nicheStatLabelDark: {
+    color: "#f0f0f0",
+  },
   nicheStatValue: {
     fontSize: 12,
     fontWeight: "600",
     color: "#1f2937",
   },
+  nicheStatValueDark: {
+    color: "#dfdfdf",
+  },
   nicheStatValueGreen: {
     fontSize: 12,
     fontWeight: "600",
+    color: "#16a34a",
+  },
+  nicheStatValueGreenDark: {
     color: "#16a34a",
   },
   modalOverlay: {
@@ -2425,6 +2927,9 @@ color: "#d4d4d4"
     shadowRadius: 4,
     elevation: 3,
   },
+  sceneCardDark: {
+    backgroundColor: "rgb(45 45 45)",
+  },
   sceneHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2437,10 +2942,16 @@ color: "#d4d4d4"
     color: "#9333ea",
     marginBottom: 4,
   },
+  sceneTimeDark: {
+    color: "#b567ff",
+  },
   sceneType: {
     fontSize: 12,
     fontWeight: "bold",
     color: "#1f2937",
+  },
+  sceneTypeDark: {
+    color: "#9ca3af",
   },
   sceneContent: {
     gap: 8,
@@ -2450,10 +2961,16 @@ color: "#d4d4d4"
     color: "#6b7280",
     marginBottom: 2,
   },
+  sceneLabelDark: {
+    color: "#9ca3af",
+  },
   sceneText: {
     fontSize: 12,
     color: "#374151",
     marginBottom: 8,
+  },
+  sceneTextDark: {
+    color: "#f0f0f0",
   },
   seoCard: {
     backgroundColor: "#fff",
@@ -2466,6 +2983,9 @@ color: "#d4d4d4"
     shadowRadius: 4,
     elevation: 3,
   },
+  seoCardDark: {
+    backgroundColor: "rgb(45 45 45)",
+  },
   seoTitle: {
     fontSize: 14,
     fontWeight: "600",
@@ -2477,6 +2997,12 @@ color: "#d4d4d4"
     color: "#6b7280",
     marginBottom: 4,
     marginTop: 8,
+  },
+  seoTitleDark: {
+    color: "#9ca3af",
+  },
+  seoLabelDark: {
+    color: "#f0f0f0",
   },
   tagsContainer: {
     flexDirection: "row",
@@ -2503,6 +3029,12 @@ color: "#d4d4d4"
     fontSize: 12,
     fontWeight: "600",
     color: "#374151",
+  },
+  seoTextDark: {
+    color: "#9ca3af",
+  },
+  seoValueDark: {
+    color: "#9ca3af",
   },
   scriptActions: {
     flexDirection: "row",
@@ -2903,6 +3435,560 @@ color: "#d4d4d4"
   },
   navTextActive: {
     color: "#9333ea",
+  },
+  // ========== НЕДОСТАЮЩИЕ DARK СТИЛИ ==========
+
+  // Container & Full Screen
+  containerDark: {
+    flex: 1,
+    padding: 24,
+    backgroundColor: "#333333",
+  },
+  fullScreenDark: {
+    flex: 1,
+    padding: 24,
+    backgroundColor: "#333333",
+  },
+
+  // Modal Content
+  modalContentDark: {
+    backgroundColor: "#2c2c2c",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "80%",
+  },
+  modalTitleDark: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#f0f0f0",
+  },
+  modalSectionDark: {
+    backgroundColor: "#3a3a3a",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  modalSectionTitleDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f0f0f0",
+    marginBottom: 8,
+  },
+  modalLabelDark: {
+    fontSize: 12,
+    color: "#9ca3af",
+    marginBottom: 4,
+  },
+  modalValueDark: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#e0e0e0",
+  },
+  recommendationDark: {
+    fontSize: 12,
+    color: "#d1d5db",
+    marginBottom: 4,
+  },
+
+  // Saved Scripts
+  savedScriptsButtonDark: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#4e4e4e",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#6b7280",
+  },
+  savedScriptsButtonActive: {
+    backgroundColor: "#9333ea",
+    borderColor: "#9333ea",
+  },
+  savedScriptsButtonTextActive: {
+    color: "#fff",
+  },
+  savedScriptCardDark: {
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  savedScriptTitleDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f0f0f0",
+    marginBottom: 4,
+  },
+  savedScriptDateDark: {
+    fontSize: 10,
+    color: "#9ca3af",
+  },
+
+  // Script Prompt
+  scriptPromptDark: {
+    backgroundColor: "#4e4e4e",
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "#6b7280",
+    marginBottom: 16,
+  },
+  scriptPromptTitleDark: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#f0f0f0",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  scriptPromptTextDark: {
+    fontSize: 12,
+    color: "#d1d5db",
+    marginBottom: 16,
+  },
+
+  // Niche Select
+  nicheSelectCardDark: {
+    backgroundColor: "#3a3a3a",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#4b5563",
+  },
+  nicheSelectNameDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f0f0f0",
+  },
+
+  // Loading
+  loadingContainerDark: {
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 32,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  loadingTextDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9ca3af",
+  },
+
+  // Secondary Button
+  secondaryButtonDark: {
+    flex: 1,
+    backgroundColor: "#4e4e4e",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  secondaryButtonTextDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f0f0f0",
+  },
+
+  // Metrics
+  metricCardDark: {
+    flex: 1,
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  metricLabelDark: {
+    fontSize: 12,
+    color: "#9ca3af",
+    marginBottom: 4,
+  },
+  metricValueDark: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#f0f0f0",
+  },
+
+  // Chart
+  chartCardDark: {
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  chartTitleDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f0f0f0",
+  },
+  chartDayDark: {
+    fontSize: 10,
+    color: "#9ca3af",
+    width: 24,
+  },
+  chartBarContainerDark: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#4e4e4e",
+    borderRadius: 4,
+  },
+  chartValueDark: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#d1d5db",
+    width: 48,
+    textAlign: "right",
+  },
+
+  // Recommendations
+  recommendationsCardDark: {
+    backgroundColor: "#7c2d12",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#ea580c",
+  },
+  recommendationsTitleDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#f9fafb",
+  },
+  recommendationItemDark: {
+    fontSize: 12,
+    color: "#d1d5db",
+    marginBottom: 8,
+  },
+
+  // Optimization
+  optimizationCardDark: {
+    backgroundColor: "#2c2c2c",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  optimizationTitleDark: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#f0f0f0",
+    marginBottom: 8,
+  },
+  optimizationTextDark: {
+    fontSize: 12,
+    color: "#9ca3af",
+    marginBottom: 16,
+  },
+
+  // Pro Modal
+  proModalContentDark: {
+    backgroundColor: "#2c2c2c",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "90%",
+  },
+  proModalTitleDark: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#f9fafb",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  pricingCardDark: {
+    backgroundColor: "#3a3a3a",
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "#9333ea",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  pricingNameDark: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#f9fafb",
+    marginBottom: 8,
+  },
+  pricingPeriodDark: {
+    fontSize: 16,
+    color: "#9ca3af",
+    marginLeft: 4,
+  },
+  pricingFeatureTextDark: {
+    fontSize: 14,
+    color: "#d1d5db",
+    flex: 1,
+  },
+
+
+  // Login Modal
+  loginModalContentDark: {
+    backgroundColor: "#2c2c2c",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "90%",
+  },
+  loginModalTitleDark: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#f9fafb",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  loginModalSubtitleDark: {
+    fontSize: 14,
+    color: "#9ca3af",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  inputLabelDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#d1d5db",
+  },
+  inputDark: {
+    backgroundColor: "#374151",
+    borderWidth: 1,
+    borderColor: "#4b5563",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: "#f9fafb",
+  },
+  dividerLineDark: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#4b5563",
+  },
+  dividerTextDark: {
+    fontSize: 12,
+    color: "#9ca3af",
+  },
+  socialButtonDark: {
+    backgroundColor: "#374151",
+    borderWidth: 1,
+    borderColor: "#4b5563",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  socialButtonTextDark: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#d1d5db",
+  },
+  registerLinkDark: {
+    fontSize: 14,
+    color: "#9ca3af",
+    textAlign: "center",
+  },
+
+  // Settings Modal
+  settingsModalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  settingsModalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    width: "90%",
+    height: "90%",
+    padding: 24,
+  },
+  settingsModalContentDark: {
+    backgroundColor: "#2c2c2c",
+  },
+  settingsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  settingsTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+  settingsTitleDark: {
+    color: "#f9fafb",
+  },
+  settingsContent: {
+    flex: 1,
+  },
+  settingsSection: {
+    marginBottom: 24,
+  },
+  settingsSectionDark: {
+    marginBottom: 24,
+  },
+  settingsSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 12,
+  },
+  settingsSectionTitleDark: {
+    color: "#f9fafb",
+  },
+  settingsItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  settingsItemDark: {
+    backgroundColor: "#374151",
+  },
+  settingsItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  settingsItemText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  settingsItemTextDark: {
+    color: "#f9fafb",
+  },
+  settingsItemValue: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  settingsItemValueDark: {
+    color: "#9ca3af",
+  },
+  settingsToggle: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#e5e7eb",
+    justifyContent: "center",
+    paddingHorizontal: 2,
+  },
+  settingsToggleActive: {
+    backgroundColor: "#9333ea",
+  },
+  settingsToggleCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    alignSelf: "flex-start",
+  },
+  settingsToggleCircleActive: {
+    alignSelf: "flex-end",
+  },
+
+  themeButtonContainer: {
+    marginRight: 8,
+  },
+  themeButtonGradient: {
+    width: 64,
+    height: 34,
+    borderRadius: 17,
+    position: "relative",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  themeButtonGradientLight: {
+    backgroundColor: "#93c5fd",
+  },
+  themeButtonGradientDark: {
+    backgroundColor: "#1e3a8a",
+  },
+  themeButtonSlider: {
+    position: "absolute",
+    top: 2,
+    left: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+    zIndex: 10,
+  },
+  themeEmoji: {
+    fontSize: 16,
+  },
+  themeButtonIcons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    height: "100%",
+  },
+  themeButtonIcon: {
+    fontSize: 14,
+    opacity: 0.4,
+  },
+  themeButtonIconActive: {
+    opacity: 0,
+  },
+  registerLinkBold: {
+    fontWeight: "600",
+    color: "#9333ea",
+  },
+
+  // Navigation Text Dark
+  navTextDark: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#6b7280",
+    marginTop: 4,
   },
 });
 
