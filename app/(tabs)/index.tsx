@@ -603,6 +603,7 @@ const YouTubeCreatorApp = () => {
 
   const generateScript = (niche: Niche) => {
     setLoading(true);
+    setShowSavedScripts(false);
     setTimeout(() => {
       const newScript: GeneratedScript = {
         id: `script_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -671,6 +672,9 @@ const YouTubeCreatorApp = () => {
 
   const deleteScript = (id: string) => {
     setSavedScripts(savedScripts.filter((script) => script.id !== id));
+      if (savedScripts.length === 1) {
+    setShowSavedScripts(false);
+  }
   };
 
   const loadScript = (script: GeneratedScript) => {
