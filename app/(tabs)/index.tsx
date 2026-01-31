@@ -82,6 +82,8 @@ const YouTubeCreatorApp = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
   const [showProModal, setShowProModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
   // ================Темная тема
 
   const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
@@ -104,6 +106,7 @@ const YouTubeCreatorApp = () => {
   const toggleTheme = () => {
     setIsDarkTheme(!isDarkTheme);
   };
+
   const SearchBar = React.memo(
     ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
       return (
@@ -1094,24 +1097,42 @@ const YouTubeCreatorApp = () => {
         </Text>
       </View>
 
-      {savedScripts.length > 0 && (
-        <TouchableOpacity
-          style={styles.savedScriptsButton}
-          onPress={() => setShowSavedScripts(!showSavedScripts)}
-          activeOpacity={0.7}
-        >
-          <Bookmark color="#9333ea" size={20} />
-          <Text style={styles.savedScriptsButtonText}>
-            Сохраненные сценарии ({savedScripts.length})
-          </Text>
-          <ChevronRight color="#9333ea" size={20} />
-        </TouchableOpacity>
-      )}
+{savedScripts.length > 0 && (
+  <TouchableOpacity
+    style={[
+      styles.savedScriptsButton,
+      isDarkTheme && styles.savedScriptsButtonDark,
+      showSavedScripts && styles.savedScriptsButtonActive,
+    ]}
+    onPress={() => {
+      setShowSavedScripts(!showSavedScripts);
+      if (!showSavedScripts) {
+        setGeneratedScript(null);
+      }
+    }}
+    activeOpacity={0.7}
+  >
+      {!showSavedScripts && (
+    <Bookmark color="#9333ea" size={20} />
+  )}
+    <Text 
+      style={[
+        styles.savedScriptsButtonText,
+        showSavedScripts && styles.savedScriptsButtonTextActive
+      ]}
+    >
+    {showSavedScripts
+      ? "← Назад к генерации"
+      : `Сохраненные сценарии (${savedScripts.length})`}
+  </Text>
+    {!showSavedScripts && <ChevronRight color="#9333ea" size={20} />}
+  </TouchableOpacity>
+)}
 
       {showSavedScripts ? (
         <View>
           {savedScripts.map((script) => (
-            <View key={script.id} style={styles.savedScriptCard}>
+            <View key={script.id} style={[styles.savedScriptCard, isDarkTheme && styles.savedScriptCardDark]}>
               <TouchableOpacity
                 style={styles.savedScriptContent}
                 onPress={() => loadScript(script)}
@@ -1663,7 +1684,10 @@ const YouTubeCreatorApp = () => {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.menuItem}  activeOpacity={0.7} onPress={() => {
+    setMenuOpen(false);
+    setShowSettingsModal(true);
+  }}>
                 <Settings stroke={iconColorSettings} size={20} />
                 <Text
                   style={[
