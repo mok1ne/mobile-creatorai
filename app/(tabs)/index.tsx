@@ -22,8 +22,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  KeyboardAvoidingView,
   Modal,
   PanResponder,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -85,6 +87,13 @@ const YouTubeCreatorApp = () => {
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const settingsSlideAnim = useRef(new Animated.Value(0)).current;
 
+    // Стейты для регистрации
+  const [showRegisterModal, setShowRegisterModal] = useState<boolean>(false);
+  const [registerEmail, setRegisterEmail] = useState<string>("");
+  const [registerPassword, setRegisterPassword] = useState<string>("");
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState<string>("");
+  const registerSlideAnim = useRef(new Animated.Value(0)).current;
+
   // ================Темная тема
 
   const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
@@ -126,6 +135,69 @@ const YouTubeCreatorApp = () => {
       useNativeDriver: true,
     }).start(() => setShowSettingsModal(false));
   };
+  // Анимация для модалки регистрации
+useEffect(() => {
+  if (showRegisterModal) {
+    registerSlideAnim.setValue(screenHeight);
+    Animated.spring(registerSlideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      damping: 22,
+      stiffness: 180,
+      mass: 1,
+    }).start();
+  }
+}, [showRegisterModal]);
+
+// PanResponder для модалки регистрации
+const registerPanResponder = useRef(
+  PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true,
+
+    onMoveShouldSetPanResponder: (_, g) => {
+      return g.dy > 6 && Math.abs(g.dx) < 10;
+    },
+
+    onPanResponderMove: (_, g) => {
+      if (g.dy > 0) {
+        registerSlideAnim.setValue(g.dy);
+      }
+    },
+
+    onPanResponderRelease: (_, g) => {
+      const shouldClose = g.dy > 120 || g.vy > 1.2;
+      if (shouldClose) {
+        Animated.timing(registerSlideAnim, {
+          toValue: screenHeight,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => setShowRegisterModal(false));
+      } else {
+        Animated.spring(registerSlideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 22,
+          stiffness: 180,
+        }).start();
+      }
+    },
+  }),
+).current;
+
+const closeRegisterModal = () => {
+  Animated.timing(registerSlideAnim, {
+    toValue: screenHeight,
+    duration: 200,
+    useNativeDriver: true,
+  }).start(() => {
+    setShowRegisterModal(false);
+    // Очищаем поля при закрытии
+    setRegisterEmail("");
+    setRegisterPassword("");
+    setRegisterPasswordConfirm("");
+  });
+};
 
   const SearchBar = React.memo(
     ({ value, onChange }: { value: string; onChange: (t: string) => void }) => {
@@ -2478,11 +2550,189 @@ const YouTubeCreatorApp = () => {
                 <TouchableOpacity activeOpacity={0.7}>
                   <Text style={styles.forgotPassword}>Забыли пароль?</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+  onPress={() => {
+    closeLoginModal();
+    setTimeout(() => setShowRegisterModal(true), 300);
+  }}
+  activeOpacity={0.7}
+  style={{ marginTop: 16 }}
+>
+  <Text style={[styles.registerLink, isDarkTheme && styles.registerLinkDark]}>
+    Нет аккаунта? <Text style={styles.registerLinkBold}>Зарегистрироваться</Text>
+  </Text>
+</TouchableOpacity>
               </View>
             </ScrollView>
           </Animated.View>
         </View>
       </Modal>
+      {/* Register Modal */}
+<Modal
+  visible={showRegisterModal}
+  transparent={true}
+  animationType="fade"
+  onRequestClose={closeRegisterModal}
+>
+  <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={{ flex: 1 }}
+  >
+    <View style={styles.modalOverlay}>
+      <TouchableOpacity
+        style={StyleSheet.absoluteFill}
+        activeOpacity={1}
+        onPress={closeRegisterModal}
+      />
+      <Animated.View
+        style={[
+          styles.loginModalContent,
+          isDarkTheme && styles.loginModalContentDark,
+          { transform: [{ translateY: registerSlideAnim }] },
+        ]}
+      >
+        {/* Handle для свайпа */}
+        <Animated.View
+          {...registerPanResponder.panHandlers}
+          style={styles.modalHandle}
+          hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+        >
+          <View style={styles.handleBar} />
+        </Animated.View>
+
+        {/* Заголовок */}
+        <Text style={[styles.loginModalTitle, isDarkTheme && styles.loginModalTitleDark]}>
+          📝 Регистрация
+        </Text>
+        <Text style={[styles.loginModalSubtitle, isDarkTheme && styles.loginModalSubtitleDark]}>
+          Создайте аккаунт для полного доступа
+        </Text>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: "100%" }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.loginForm}>
+            {/* Поле Email */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDarkTheme && styles.inputLabelDark]}>
+                Email
+              </Text>
+              <TextInput
+                style={[styles.input, isDarkTheme && styles.inputDark]}
+                placeholder="your@email.com"
+                placeholderTextColor={isDarkTheme ? "#6b7280" : "#9ca3af"}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={registerEmail}
+                onChangeText={setRegisterEmail}
+              />
+            </View>
+
+            {/* Поле Пароль */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDarkTheme && styles.inputLabelDark]}>
+                Пароль
+              </Text>
+              <TextInput
+                style={[styles.input, isDarkTheme && styles.inputDark]}
+                placeholder="••••••••"
+                placeholderTextColor={isDarkTheme ? "#6b7280" : "#9ca3af"}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={registerPassword}
+                onChangeText={setRegisterPassword}
+              />
+            </View>
+
+            {/* Поле Подтверждение пароля */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.inputLabel, isDarkTheme && styles.inputLabelDark]}>
+                Подтвердите пароль
+              </Text>
+              <TextInput
+                style={[styles.input, isDarkTheme && styles.inputDark]}
+                placeholder="••••••••"
+                placeholderTextColor={isDarkTheme ? "#6b7280" : "#9ca3af"}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={registerPasswordConfirm}
+                onChangeText={setRegisterPasswordConfirm}
+              />
+            </View>
+
+            {/* Кнопка регистрации */}
+            <TouchableOpacity
+              style={styles.loginButton}
+              activeOpacity={0.8}
+              onPress={() => {
+                // Здесь будет логика регистрации
+                if (registerPassword !== registerPasswordConfirm) {
+                  alert("Пароли не совпадают!");
+                  return;
+                }
+                if (!registerEmail || !registerPassword) {
+                  alert("Заполните все поля!");
+                  return;
+                }
+                // TODO: Добавить вашу логику регистрации
+                alert("Регистрация успешна!");
+                closeRegisterModal();
+              }}
+            >
+              <Text style={styles.loginButtonText}>Зарегистрироваться</Text>
+            </TouchableOpacity>
+
+            {/* Разделитель */}
+            <View style={styles.divider}>
+              <View style={[styles.dividerLine, isDarkTheme && styles.dividerLineDark]} />
+              <Text style={[styles.dividerText, isDarkTheme && styles.dividerTextDark]}>или</Text>
+              <View style={[styles.dividerLine, isDarkTheme && styles.dividerLineDark]} />
+            </View>
+
+            {/* Кнопка Google */}
+            <TouchableOpacity
+              style={[styles.socialButton, isDarkTheme && styles.socialButtonDark]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.socialButtonText, isDarkTheme && styles.socialButtonTextDark]}>
+                🔷 Регистрация через Google
+              </Text>
+            </TouchableOpacity>
+
+            {/* Кнопка Facebook */}
+            <TouchableOpacity
+              style={[styles.socialButton, isDarkTheme && styles.socialButtonDark]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.socialButtonText, isDarkTheme && styles.socialButtonTextDark]}>
+                📘 Регистрация через Facebook
+              </Text>
+            </TouchableOpacity>
+
+            {/* Ссылка на вход */}
+            <TouchableOpacity
+              onPress={() => {
+                closeRegisterModal();
+                setTimeout(() => setShowLoginModal(true), 300);
+              }}
+              activeOpacity={0.7}
+              style={{ marginTop: 16 }}
+            >
+              <Text style={[styles.registerLink, isDarkTheme && styles.registerLinkDark]}>
+                Уже есть аккаунт? <Text style={styles.registerLinkBold}>Войти</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </Animated.View>
+    </View>
+  </KeyboardAvoidingView>
+</Modal>
 
       {/* Content */}
       <View style={styles.content}>
@@ -4203,6 +4453,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 24,
   },
+
+  registerLink: {
+  fontSize: 14,
+  color: "#6b7280",
+  textAlign: "center",
+},
+registerLinkDark: {
+  color: "#9ca3af",
+},
+registerLinkBold: {
+  fontWeight: "600",
+  color: "#9333ea",
+},
   inputLabelDark: {
     fontSize: 14,
     fontWeight: "600",
@@ -4240,11 +4503,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#d1d5db",
   },
-  registerLinkDark: {
-    fontSize: 14,
-    color: "#9ca3af",
-    textAlign: "center",
-  },
+
 
   // Settings Modal
   settingsModalOverlay: {
@@ -4405,10 +4664,7 @@ const styles = StyleSheet.create({
   themeButtonIconActive: {
     opacity: 0,
   },
-  registerLinkBold: {
-    fontWeight: "600",
-    color: "#9333ea",
-  },
+
 
   // Navigation Text Dark
   navTextDark: {
