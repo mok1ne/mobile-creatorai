@@ -82,13 +82,13 @@ const YouTubeCreatorApp = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
   const [showProModal, setShowProModal] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const settingsSlideAnim = useRef(new Animated.Value(0)).current;
 
   // ================Темная тема
 
   const [isDarkTheme, setIsDarkTheme] = useState<boolean>(false);
   const iconColorMenu = isDarkTheme ? "#fff" : "#000";
-  const iconColorSettings = isDarkTheme ? "#dfdfdf" : "#4b5563";
   const themeAnimValue = useRef(
     new Animated.Value(isDarkTheme ? 1 : 0),
   ).current;
@@ -105,6 +105,26 @@ const YouTubeCreatorApp = () => {
 
   const toggleTheme = () => {
     setIsDarkTheme(!isDarkTheme);
+  };
+
+  useEffect(() => {
+    if (showSettingsModal) {
+      settingsSlideAnim.setValue(1);
+      Animated.spring(settingsSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 22,
+        stiffness: 180,
+      }).start();
+    }
+  }, [showSettingsModal]);
+
+  const closeSettingsModal = () => {
+    Animated.timing(settingsSlideAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowSettingsModal(false));
   };
 
   const SearchBar = React.memo(
@@ -675,9 +695,9 @@ const YouTubeCreatorApp = () => {
 
   const deleteScript = (id: string) => {
     setSavedScripts(savedScripts.filter((script) => script.id !== id));
-      if (savedScripts.length === 1) {
-    setShowSavedScripts(false);
-  }
+    if (savedScripts.length === 1) {
+      setShowSavedScripts(false);
+    }
   };
 
   const loadScript = (script: GeneratedScript) => {
@@ -1097,42 +1117,46 @@ const YouTubeCreatorApp = () => {
         </Text>
       </View>
 
-{savedScripts.length > 0 && (
-  <TouchableOpacity
-    style={[
-      styles.savedScriptsButton,
-      isDarkTheme && styles.savedScriptsButtonDark,
-      showSavedScripts && styles.savedScriptsButtonActive,
-    ]}
-    onPress={() => {
-      setShowSavedScripts(!showSavedScripts);
-      if (!showSavedScripts) {
-        setGeneratedScript(null);
-      }
-    }}
-    activeOpacity={0.7}
-  >
-      {!showSavedScripts && (
-    <Bookmark color="#9333ea" size={20} />
-  )}
-    <Text 
-      style={[
-        styles.savedScriptsButtonText,
-        showSavedScripts && styles.savedScriptsButtonTextActive
-      ]}
-    >
-    {showSavedScripts
-      ? "← Назад к генерации"
-      : `Сохраненные сценарии (${savedScripts.length})`}
-  </Text>
-    {!showSavedScripts && <ChevronRight color="#9333ea" size={20} />}
-  </TouchableOpacity>
-)}
+      {savedScripts.length > 0 && (
+        <TouchableOpacity
+          style={[
+            styles.savedScriptsButton,
+            isDarkTheme && styles.savedScriptsButtonDark,
+            showSavedScripts && styles.savedScriptsButtonActive,
+          ]}
+          onPress={() => {
+            setShowSavedScripts(!showSavedScripts);
+            if (!showSavedScripts) {
+              setGeneratedScript(null);
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          {!showSavedScripts && <Bookmark color="#9333ea" size={20} />}
+          <Text
+            style={[
+              styles.savedScriptsButtonText,
+              showSavedScripts && styles.savedScriptsButtonTextActive,
+            ]}
+          >
+            {showSavedScripts
+              ? "← Назад к генерации"
+              : `Сохраненные сценарии (${savedScripts.length})`}
+          </Text>
+          {!showSavedScripts && <ChevronRight color="#9333ea" size={20} />}
+        </TouchableOpacity>
+      )}
 
       {showSavedScripts ? (
         <View>
           {savedScripts.map((script) => (
-            <View key={script.id} style={[styles.savedScriptCard, isDarkTheme && styles.savedScriptCardDark]}>
+            <View
+              key={script.id}
+              style={[
+                styles.savedScriptCard,
+                isDarkTheme && styles.savedScriptCardDark,
+              ]}
+            >
               <TouchableOpacity
                 style={styles.savedScriptContent}
                 onPress={() => loadScript(script)}
@@ -1684,11 +1708,18 @@ const YouTubeCreatorApp = () => {
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem}  activeOpacity={0.7} onPress={() => {
-    setMenuOpen(false);
-    setShowSettingsModal(true);
-  }}>
-                <Settings stroke={iconColorSettings} size={20} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setShowSettingsModal(true);
+                  setMenuOpen(false);
+                }}
+              >
+                <Settings
+                  color={isDarkTheme ? "#9ca3af" : "#4b5563"}
+                  size={20}
+                />
                 <Text
                   style={[
                     styles.menuItemText,
@@ -1722,47 +1753,6 @@ const YouTubeCreatorApp = () => {
                   3/5 сценариев использовано
                 </Text>
               </View>
-              <View style={styles.headerActions}>
-                <TouchableOpacity
-                  onPress={toggleTheme}
-                  style={styles.themeToggleContainer}
-                  activeOpacity={0.8}
-                >
-                  <Animated.View
-                    style={[
-                      styles.themeToggle,
-                      {
-                        backgroundColor: themeAnimValue.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ["#e0e7ff", "#1e1b4b"],
-                        }),
-                      },
-                    ]}
-                  >
-                    <Animated.View
-                      style={[
-                        styles.themeToggleCircle,
-                        {
-                          transform: [
-                            {
-                              translateX: themeAnimValue.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [2, 26],
-                              }),
-                            },
-                          ],
-                        },
-                      ]}
-                    >
-                      {isDarkTheme ? (
-                        <Moon color="#fbbf24" size={16} />
-                      ) : (
-                        <Sun color="#f59e0b" size={16} />
-                      )}
-                    </Animated.View>
-                  </Animated.View>
-                </TouchableOpacity>
-              </View>
 
               <TouchableOpacity
                 style={styles.menuItemPro}
@@ -1778,7 +1768,373 @@ const YouTubeCreatorApp = () => {
           </Animated.View>
         </View>
       </Modal>
+      {/* Settings Modal */}
+      <Modal
+        visible={showSettingsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeSettingsModal}
+      >
+        <View style={styles.settingsModalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={closeSettingsModal}
+          />
+          <Animated.View
+            style={[
+              styles.settingsModalContent,
+              isDarkTheme && styles.settingsModalContentDark,
+              {
+                transform: [
+                  {
+                    scale: settingsSlideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0.9],
+                    }),
+                  },
+                ],
+                opacity: settingsSlideAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 0],
+                }),
+              },
+            ]}
+          >
+            {/* Заголовок */}
+            <View style={styles.settingsHeader}>
+              <Text
+                style={[
+                  styles.settingsTitle,
+                  isDarkTheme && styles.settingsTitleDark,
+                ]}
+              >
+                ⚙️ Настройки
+              </Text>
+              <TouchableOpacity onPress={closeSettingsModal}>
+                <X color={isDarkTheme ? "#fff" : "#000"} size={24} />
+              </TouchableOpacity>
+            </View>
 
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={styles.settingsContent}
+            >
+              {/* СЕКЦИЯ 1: Внешний вид */}
+              <View
+                style={[
+                  styles.settingsSection,
+                  isDarkTheme && styles.settingsSectionDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.settingsSectionTitle,
+                    isDarkTheme && styles.settingsSectionTitleDark,
+                  ]}
+                >
+                  Внешний вид
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  onPress={toggleTheme}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    {isDarkTheme ? (
+                      <Moon color="#9333ea" size={20} />
+                    ) : (
+                      <Sun color="#9333ea" size={20} />
+                    )}
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      {isDarkTheme ? "Темная тема" : "Светлая тема"}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.settingsToggle,
+                      isDarkTheme && styles.settingsToggleActive,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.settingsToggleCircle,
+                        isDarkTheme && styles.settingsToggleCircleActive,
+                      ]}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* СЕКЦИЯ 2: Аккаунт */}
+              <View
+                style={[
+                  styles.settingsSection,
+                  isDarkTheme && styles.settingsSectionDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.settingsSectionTitle,
+                    isDarkTheme && styles.settingsSectionTitleDark,
+                  ]}
+                >
+                  Аккаунт
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      Email
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.settingsItemValue,
+                      isDarkTheme && styles.settingsItemValueDark,
+                    ]}
+                  >
+                    Не указан
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      План
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.settingsItemValue,
+                      isDarkTheme && styles.settingsItemValueDark,
+                    ]}
+                  >
+                    Бесплатный
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* СЕКЦИЯ 3: Уведомления */}
+              <View
+                style={[
+                  styles.settingsSection,
+                  isDarkTheme && styles.settingsSectionDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.settingsSectionTitle,
+                    isDarkTheme && styles.settingsSectionTitleDark,
+                  ]}
+                >
+                  Уведомления
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      Push-уведомления
+                    </Text>
+                  </View>
+                  <View style={styles.settingsToggle}>
+                    <View style={styles.settingsToggleCircle} />
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      Email-рассылка
+                    </Text>
+                  </View>
+                  <View style={styles.settingsToggle}>
+                    <View style={styles.settingsToggleCircle} />
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* СЕКЦИЯ 4: О приложении */}
+              <View
+                style={[
+                  styles.settingsSection,
+                  isDarkTheme && styles.settingsSectionDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.settingsSectionTitle,
+                    isDarkTheme && styles.settingsSectionTitleDark,
+                  ]}
+                >
+                  О приложении
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsItemLeft}>
+                    <Text
+                      style={[
+                        styles.settingsItemText,
+                        isDarkTheme && styles.settingsItemTextDark,
+                      ]}
+                    >
+                      Версия
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.settingsItemValue,
+                      isDarkTheme && styles.settingsItemValueDark,
+                    ]}
+                  >
+                    1.0.0
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.settingsItemText,
+                      isDarkTheme && styles.settingsItemTextDark,
+                    ]}
+                  >
+                    Политика конфиденциальности
+                  </Text>
+                  <ChevronRight color="#9ca3af" size={20} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.settingsItemText,
+                      isDarkTheme && styles.settingsItemTextDark,
+                    ]}
+                  >
+                    Условия использования
+                  </Text>
+                  <ChevronRight color="#9ca3af" size={20} />
+                </TouchableOpacity>
+              </View>
+
+              {/* СЕКЦИЯ 5: Опасная зона */}
+              <View
+                style={[
+                  styles.settingsSection,
+                  isDarkTheme && styles.settingsSectionDark,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.settingsSectionTitle,
+                    isDarkTheme && styles.settingsSectionTitleDark,
+                  ]}
+                >
+                  Опасная зона
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                    { borderWidth: 1, borderColor: "#ef4444" },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.settingsItemText, { color: "#ef4444" }]}>
+                    Очистить все данные
+                  </Text>
+                  <Trash2 color="#ef4444" size={20} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.settingsItem,
+                    isDarkTheme && styles.settingsItemDark,
+                    { borderWidth: 1, borderColor: "#ef4444" },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.settingsItemText, { color: "#ef4444" }]}>
+                    Удалить аккаунт
+                  </Text>
+                  <X color="#ef4444" size={20} />
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
       {/* Pro Modal */}
       <Modal
         visible={showProModal}
@@ -1848,25 +2204,45 @@ const YouTubeCreatorApp = () => {
                 <View style={styles.pricingFeatures}>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       Неограниченная генерация сценариев
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       Продвинутый анализ ниш
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       Полная аналитика канала
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       SEO-оптимизация
                     </Text>
                   </View>
@@ -1910,23 +2286,47 @@ const YouTubeCreatorApp = () => {
                 <View style={styles.pricingFeatures}>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>Всё из Pro +</Text>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
+                      Всё из Pro +
+                    </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       Управление несколькими каналами
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
                       Приоритетная поддержка
                     </Text>
                   </View>
                   <View style={styles.pricingFeature}>
                     <Check color="#16a34a" size={20} />
-                    <Text style={[styles.pricingFeatureText, isDarkTheme && styles.pricingFeatureTextDark]}>API доступ</Text>
+                    <Text
+                      style={[
+                        styles.pricingFeatureText,
+                        isDarkTheme && styles.pricingFeatureTextDark,
+                      ]}
+                    >
+                      API доступ
+                    </Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -3781,7 +4181,6 @@ const styles = StyleSheet.create({
     color: "#d1d5db",
     flex: 1,
   },
-
 
   // Login Modal
   loginModalContentDark: {
